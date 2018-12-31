@@ -294,7 +294,7 @@ function set_ownership_and_permissions {
   elif id -u "$user" > /dev/null 2>&1; then
     # Convert the user name to numeric ID
     local user_num="$(id -u "$user")"
-    [[ "$(lc $DEBUG)" == true ]] && echo "Debug: numeric ID of user $user is $user_num."
+    [[ ${DEBUG:-} == 1 ]] && echo "Debug: numeric ID of user $user is $user_num."
   else
     echo "Warning: user $user not found in the container, please use a numeric user ID instead of a user name. Skipping ownership and permissions check."
     return 1
@@ -307,7 +307,7 @@ function set_ownership_and_permissions {
   elif getent group "$group" > /dev/null 2>&1; then
     # Convert the group name to numeric ID
     local group_num="$(getent group "$group" | awk -F ':' '{print $3}')"
-    [[ "$(lc $DEBUG)" == true ]] && echo "Debug: numeric ID of group $group is $group_num."
+    [[ ${DEBUG:-} == 1 ]] && echo "Debug: numeric ID of group $group is $group_num."
   else
     echo "Warning: group $group not found in the container, please use a numeric group ID instead of a group name. Skipping ownership and permissions check."
     return 1
@@ -316,7 +316,7 @@ function set_ownership_and_permissions {
   # Check and modify ownership if required.
   if [[ -e "$path" ]]; then
     if [[ "$(stat -c %u:%g "$path" )" != "$user_num:$group_num" ]]; then
-      [[ "$(lc $DEBUG)" == true ]] && echo "Debug: setting $path ownership to $user:$group."
+      [[ ${DEBUG:-} == 1 ]] && echo "Debug: setting $path ownership to $user:$group."
       if [[ -L "$path" ]]; then
         chown -h "$user_num:$group_num" "$path"
       else
@@ -326,7 +326,7 @@ function set_ownership_and_permissions {
     # If the path is a folder, check and modify permissions if required.
     if [[ -d "$path" ]]; then
       if [[ "$(stat -c %a "$path")" != "$d_perms" ]]; then
-        [[ "$(lc $DEBUG)" == true ]] && echo "Debug: setting $path permissions to $d_perms."
+        [[ ${DEBUG:-} == 1 ]] && echo "Debug: setting $path permissions to $d_perms."
         chmod "$d_perms" "$path"
       fi
     # If the path is a file, check and modify permissions if required.
@@ -334,13 +334,13 @@ function set_ownership_and_permissions {
       # Use different permissions for private files (private keys and ACME account files) ...
       if [[ "$path" =~ ^.*(default\.key|key\.pem|\.json)$ ]]; then
         if [[ "$(stat -c %a "$path")" != "$f_perms" ]]; then
-          [[ "$(lc $DEBUG)" == true ]] && echo "Debug: setting $path permissions to $f_perms."
+          [[ ${DEBUG:-} == 1 ]] && echo "Debug: setting $path permissions to $f_perms."
           chmod "$f_perms" "$path"
         fi
       # ... and for public files (certificates, chains, fullchains, DH parameters).
       else
         if [[ "$(stat -c %a "$path")" != "644" ]]; then
-          [[ "$(lc $DEBUG)" == true ]] && echo "Debug: setting $path permissions to 644."
+          [[ ${DEBUG:-} == 1 ]] && echo "Debug: setting $path permissions to 644."
           chmod "644" "$path"
         fi
       fi
