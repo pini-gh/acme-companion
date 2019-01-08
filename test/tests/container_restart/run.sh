@@ -53,10 +53,10 @@ for domain in "${domains[@]}"; do
   i=0
   until grep "$domain" ${TRAVIS_BUILD_DIR}/test/tests/container_restart/docker_event_out.txt; do
     if [ "$waited_once" = true ]; then
-      echo "Container $domain didn't restart in under one minute."
+      echo "Container $domain didn't restart in under two minutes."
       break
-    elif [ $i -gt 60 ]; then
-      echo "Container $domain didn't restart in under one minute."
+    elif [ $i -gt 120 ]; then
+      echo "Container $domain didn't restart in under two minutes."
       # Wait only once for all containers (since all containers are started together)
       waited_once=true
       break
@@ -64,7 +64,7 @@ for domain in "${domains[@]}"; do
     i=$((i + 2))
     sleep 2
   done
-  
+
   # Stop the Nginx container silently.
   docker stop "$domain" > /dev/null
 done
