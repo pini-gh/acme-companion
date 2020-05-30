@@ -8,7 +8,8 @@ LETSENCRYPT_CONTAINERS=({{ range $hosts, $containers := groupBy $ "Env.LETSENCRY
 LETSENCRYPT_{{ $cid }}_HOST=( {{ range $host := split $hosts "," }}{{ $host := trim $host }}'{{ $host }}' {{ end }})
 LETSENCRYPT_{{ $cid }}_KEYSIZE="{{ $container.Env.LETSENCRYPT_KEYSIZE }}"
 LETSENCRYPT_{{ $cid }}_TEST="{{ $container.Env.LETSENCRYPT_TEST }}"
-LETSENCRYPT_{{ $cid }}_ACMESH_CONFIG="{{ $container.Env.LETSENCRYPT_ACMESH_CONFIG }}"
+LETSENCRYPT_{{ $cid }}_EMAIL="{{ $container.Env.LETSENCRYPT_EMAIL }}"
+LETSENCRYPT_{{ $cid }}_ACME_CA_URI="{{ $container.Env.LETSENCRYPT_ACME_CA_URI }}"
 LETSENCRYPT_{{ $cid }}_RESTART_CONTAINER="{{ $container.Env.LETSENCRYPT_RESTART_CONTAINER }}"
 LETSENCRYPT_{{ $cid }}_MIN_VALIDITY="{{ $container.Env.LETSENCRYPT_MIN_VALIDITY }}"
 {{ end }}

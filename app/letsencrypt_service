@@ -151,27 +151,42 @@ function update_certs {
             cert_keysize=$DEFAULT_KEY_SIZE
         fi
 
+        accountemail_varname="LETSENCRYPT_${cid}_EMAIL"
+        accountemail="${!accountemail_varname}"
+        if [[ "$accountemail" == "<no value>" ]]; then
+            accountemail="${DEFAULT_EMAIL:-}"
+        fi
+        if [[ "$accountemail" == "$DEFAULT_EMAIL" ]]; then
+            config_name=default
+        else
+            config_name="$accountemail"
+        fi
+
+        acme_ca_uri_varname="LETSENCRYPT_${cid}_ACME_CA_URI"
+        acme_ca_uri="${!acme_ca_uri_varname}"
+        if [[ "$acme_ca_uri" == "<no value>" ]]; then
+            # Use default or user provided ACME end point
+            acme_ca_uri="$ACME_CA_URI"
+        fi
+
         test_certificate_varname="LETSENCRYPT_${cid}_TEST"
         if [[ $(lc "${!test_certificate_varname:-}") == true ]]; then
             # Use Let's Encrypt ACME V2 staging end point
+            # Unset accountemail
+            # force config dir to 'staging'
             acme_ca_uri="https://acme-staging-v02.api.letsencrypt.org/directory"
+            accountemail=
+            config_name=staging
         else
             # Use default or user provided ACME end point
             acme_ca_uri="$ACME_CA_URI"
         fi
+        [[ ! -d "/etc/acme.sh/$config_name" ]] && mkdir -p "/etc/acme.sh/$config_name"
 
         if [[ $acme_ca_uri =~ ^https://acme-staging.* ]]; then
             certificate_dir="/etc/nginx/certs/_test_$base_domain"
         else
             certificate_dir="/etc/nginx/certs/$base_domain"
-        fi
-
-        config_varname="LETSENCRYPT_${cid}_ACMESH_CONFIG"
-        config_name="${!config_varname}"
-        if [[ "$config_name" == "<no value>" ]]; then
-            config_name=default
-        else
-            [[ ! -d "/etc/acme.sh/$config_name" ]] && mkdir -p "/etc/acme.sh/$config_name"
         fi
 
         [[ $DEBUG == 1 ]] && params_d_str+=" --debug"
@@ -193,6 +208,7 @@ function update_certs {
         acme.sh --issue \
                 --log /dev/null \
                 --config-home "/etc/acme.sh/$config_name" \
+                ${accountemail:+--accountemail ${accountemail}} \
                 $params_d_str \
                 --keylength $cert_keysize \
                 --server $acme_ca_uri \
