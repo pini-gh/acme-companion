@@ -38,8 +38,9 @@ RUN apk add --update \
 # Install docker-gen from build stage
 COPY --from=go-builder /go/src/github.com/jwilder/docker-gen/docker-gen /usr/local/bin/
 
-# Install simp_le
+# Install acme.sh
 COPY /install_acme.sh /app/install_acme.sh
+COPY /acme.sh-patches /app/acme.sh-patches/
 RUN chmod +rx /app/install_acme.sh \
     && sync \
     && /app/install_acme.sh \
