@@ -133,8 +133,13 @@ function configure_default_email {
     # Configure the email used by the default config
     [[ -d /etc/acme.sh/default ]] || mkdir -p /etc/acme.sh/default
     if [[ -f /etc/acme.sh/default/account.conf ]]; then
-        if [[ -f /etc/acme.sh/default/ca/acme-v01.api.letsencrypt.org/account.json ]]; then
-            acme.sh --update-account --accountemail "${DEFAULT_EMAIL:-}"
+        local ca_conf
+        for ca_conf in /etc/acme.sh/default/ca/*/ca.conf; do
+            eval $(grep '^ACME_DIRECTORY=' "$ca_conf")
+            local server_conf="${ACME_DIRECTORY:+--server ${ACME_DIRECTORY}}"
+            acme.sh --update-account $server_conf --acountemail "${DEFAULT_EMAIL:-}"
+        done
+        if [ -n "$ca_conf" ]; then
             return 0
         elif grep -q ACCOUNT_EMAIL /etc/acme.sh/default/account.conf; then
             if grep -q "${DEFAULT_EMAIL:-}" /etc/acme.sh/default/account.conf; then
