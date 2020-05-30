@@ -226,6 +226,9 @@ function update_certs {
         echo "Creating/renewal $base_domain certificates... (${hosts_array_expanded[*]})"
         acme.sh --issue \
                 --log /dev/null \
+                --auto-upgrade 0 \
+                --nocron \
+                --noprofile \
                 --config-home "/etc/acme.sh/$config_name" \
                 ${accountemail:+--accountemail ${accountemail}} \
                 $params_d_str \
