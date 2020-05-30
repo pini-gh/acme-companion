@@ -21,6 +21,7 @@ done
 ./acme.sh --install \
   --nocron \
   --noprofile \
+  --log /dev/null \
   --auto-upgrade 0 \
   --home /app \
   --config-home /etc/acme.sh/default
