@@ -44,6 +44,9 @@ function descending_wildcard_locations {
     # - foo.bar.baz.*
     # - foo.bar.*
     # - foo.*
+    if [[ "${domain:0:2}" == "*." ]]; then
+        return
+    fi
     local domain="${1:?}"
     local last_label
     regex="^[[:alnum:]_\-]+$"
