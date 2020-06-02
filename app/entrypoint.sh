@@ -179,7 +179,6 @@ if [[ "$*" == "/bin/bash /app/start.sh" ]]; then
         exit 1
     fi
     check_writable_directory '/etc/nginx/certs'
-    check_writable_directory '/etc/nginx/vhost.d'
     check_writable_directory '/etc/acme.sh'
     check_writable_directory '/usr/share/nginx/html'
     check_default_cert_key
