@@ -35,6 +35,8 @@ LETSENCRYPT_CONTAINERS=(
                 {{- "\n" }}ACME_{{ $cid }}_{{ $hostHash }}_EAB_HMAC_KEY="{{ $container.Env.ACME_EAB_HMAC_KEY }}"
                 {{- "\n" }}ZEROSSL_{{ $cid }}_{{ $hostHash }}_API_KEY="{{ $container.Env.ZEROSSL_API_KEY }}"
                 {{- "\n" }}LETSENCRYPT_{{ $cid }}_{{ $hostHash }}_RESTART_CONTAINER="{{ $container.Env.LETSENCRYPT_RESTART_CONTAINER }}"
+                {{- "\n" }}LETSENCRYPT_{{ $cid }}_{{ $hostHash }}_DNS_MODE="{{ $container.Env.LETSENCRYPT_DNS_MODE }}"
+                {{- "\n" }}LETSENCRYPT_{{ $cid }}_{{ $hostHash }}_DNS_MODE_SETTINGS="{{ $container.Env.LETSENCRYPT_DNS_MODE_SETTINGS }}"
             {{ end }}
         {{ else }}
             {{- "\n" }}LETSENCRYPT_{{ $cid }}_HOST=( 
@@ -54,6 +56,8 @@ LETSENCRYPT_CONTAINERS=(
             {{- "\n" }}ACME_{{ $cid }}_EAB_HMAC_KEY="{{ $container.Env.ACME_EAB_HMAC_KEY }}"
             {{- "\n" }}ZEROSSL_{{ $cid }}_API_KEY="{{ $container.Env.ZEROSSL_API_KEY }}"
             {{- "\n" }}LETSENCRYPT_{{ $cid }}_RESTART_CONTAINER="{{ $container.Env.LETSENCRYPT_RESTART_CONTAINER }}"
+            {{- "\n" }}LETSENCRYPT_{{ $cid }}_DNS_MODE="{{ $container.Env.LETSENCRYPT_DNS_MODE }}"
+            {{- "\n" }}LETSENCRYPT_{{ $cid }}_DNS_MODE_SETTINGS="{{ $container.Env.LETSENCRYPT_DNS_MODE_SETTINGS }}"
         {{ end }}
     {{ end }}
 {{ end }}
