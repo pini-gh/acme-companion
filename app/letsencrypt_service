@@ -88,6 +88,10 @@ function cleanup_links {
       local -n hosts_array="LETSENCRYPT_${cid}_HOST"
       for domain in "${hosts_array[@]}"; do
         domain="$(strip_wildcard "$domain")"
+        # Skip wildcard domains
+        if [[ "${domain:0:2}" == "*." ]]; then
+          continue
+        fi
         # Add domain to the array storing currently enabled domains.
         ENABLED_DOMAINS+=("$domain")
       done
@@ -176,7 +180,19 @@ function update_cert {
         acme_challenge="${ACME_CHALLENGE:-HTTP-01}"
     fi
     
-    if [[ "$acme_challenge" == "HTTP-01" ]]; then
+    # Use DNS mode if configured
+    dns_mode_varname="LETSENCRYPT_${cid}_DNS_MODE"
+    dns_mode="${!dns_mode_varname:-"<no value>"}"
+    if [[ "$dns_mode" != "<no value>" ]]; then
+        params_issue_arr+=(--dns "${dns_mode}")
+        # Apply DNS mode settings
+        # Setting are in the form "export VAR=value ..."
+        dns_mode_settings_varname="LETSENCRYPT_${cid}_DNS_MODE_SETTINGS"
+        dns_mode_settings="${!dns_mode_settings_varname}"
+        if [[ "$dns_mode_settings" != "<no value>" ]]; then
+            eval "$dns_mode_settings"
+        fi
+    elif [[ "$acme_challenge" == "HTTP-01" ]]; then
         # HTTP-01 challenge
         if [[ "$wildcard_certificate" == 'true' ]]; then
             echo "Error: wildcard certificates (${base_domain}) can't be obtained with HTTP-01 challenge"
@@ -266,6 +282,7 @@ function update_cert {
         # Use default or user provided ACME end point
         acme_ca_uri="$ACME_CA_URI"
     fi
+
     # LETSENCRYPT_TEST overrides LETSENCRYPT_ACME_CA_URI
     local -n test_certificate="LETSENCRYPT_${cid}_TEST"
     if [[ $(lc "$test_certificate") == true ]]; then

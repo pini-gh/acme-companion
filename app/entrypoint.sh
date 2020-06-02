@@ -193,7 +193,6 @@ if [[ "$*" == "/bin/bash /app/start.sh" ]]; then
         exit 1
     fi
     check_writable_directory '/etc/nginx/certs'
-    parse_true "${ACME_HTTP_CHALLENGE_LOCATION:=false}" && check_writable_directory '/etc/nginx/vhost.d'
     check_writable_directory '/etc/acme.sh'
     warn_html_directory
     if [[ -f /app/letsencrypt_user_data ]]; then
