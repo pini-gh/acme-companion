@@ -5,11 +5,6 @@ term_handler() {
     [[ -n "$docker_gen_pid" ]] && kill "$docker_gen_pid"
     [[ -n "$letsencrypt_service_pid" ]] && kill "$letsencrypt_service_pid"
 
-    # shellcheck source=functions.sh
-    source /app/functions.sh
-    remove_all_location_configurations
-    remove_all_standalone_configurations
-
     exit 0
 }
 
