@@ -75,6 +75,10 @@ function cleanup_links {
     for cid in "${LETSENCRYPT_CONTAINERS[@]}"; do
       local -n hosts_array="LETSENCRYPT_${cid}_HOST"
       for domain in "${hosts_array[@]}"; do
+        # Skip wildcard domains
+        if [[ "${domain:0:2}" == "*." ]]; then
+          continue
+        fi
         # Add domain to the array storing currently enabled domains.
         ENABLED_DOMAINS+=("$domain")
       done
@@ -151,7 +155,6 @@ function update_cert {
 
     # CLI parameters array used for --issue
     local -a params_issue_arr
-    params_issue_arr+=(--webroot /usr/share/nginx/html)
 
     local -n cert_keysize="LETSENCRYPT_${cid}_KEYSIZE"
     if [[ -z "$cert_keysize" ]] || \
@@ -190,6 +193,24 @@ function update_cert {
         # Use default or user provided ACME end point
         acme_ca_uri="$ACME_CA_URI"
     fi
+
+    # Use DNS mode if configured
+    dns_mode_varname="LETSENCRYPT_${cid}_DNS_MODE"
+    dns_mode="${!dns_mode_varname:-"<no value>"}"
+    if [[ "$dns_mode" != "<no value>" ]]; then
+        params_issue_arr+=(--dns "${dns_mode}")
+        # Apply DNS mode settings
+        # Setting are in the form "export VAR=value ..."
+        dns_mode_settings_varname="LETSENCRYPT_${cid}_DNS_MODE_SETTINGS"
+        dns_mode_settings="${!dns_mode_settings_varname}"
+        if [[ "$dns_mode_settings" != "<no value>" ]]; then
+            eval "$dns_mode_settings"
+        fi
+    else
+        # fallback on webroot mode
+        params_issue_arr+=(--webroot /usr/share/nginx/html)
+    fi
+
     # LETSENCRYPT_TEST overrides LETSENCRYPT_ACME_CA_URI
     local -n test_certificate="LETSENCRYPT_${cid}_TEST"
     if [[ $(lc "$test_certificate") == true ]]; then
@@ -348,8 +369,6 @@ function update_cert {
     for domain in "${hosts_array[@]}"; do
         # Add all the domains to certificate
         params_issue_arr+=(--domain "$domain")
-        # Add location configuration for the domain
-        add_location_configuration "$domain" || reload_nginx
     done
 
     params_issue_arr=("${params_base_arr[@]}" "${params_issue_arr[@]}")
@@ -362,6 +381,10 @@ function update_cert {
     # 0 = success, 2 = RENEW_SKIP
     if [[ $acmesh_return == 0 || $acmesh_return == 2 ]]; then
         for domain in "${hosts_array[@]}"; do
+            # Skip wildcard domains
+            if [[ "${domain:0:2}" == "*." ]]; then
+              continue
+            fi
             if [[ $acme_ca_uri =~ ^https://acme-staging.* ]]; then
                 create_links "_test_$base_domain" "$domain" \
                     && should_reload_nginx='true' \
