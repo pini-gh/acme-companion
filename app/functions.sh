@@ -10,13 +10,6 @@ if [[ "$DEBUG" == true ]]; then
   DEBUG=1 && export DEBUG
 fi
 
-[[ -z "${VHOST_DIR:-}" ]] && \
- declare -r VHOST_DIR=/etc/nginx/vhost.d
-[[ -z "${START_HEADER:-}" ]] && \
- declare -r START_HEADER='## Start of configuration add by letsencrypt container'
-[[ -z "${END_HEADER:-}" ]] && \
- declare -r END_HEADER='## End of configuration add by letsencrypt container'
-
 function check_nginx_proxy_container_run {
     local _nginx_proxy_container; _nginx_proxy_container=$(get_nginx_proxy_container)
     if [[ -n "$_nginx_proxy_container" ]]; then
@@ -30,79 +23,6 @@ function check_nginx_proxy_container_run {
         echo "$(date "+%Y/%m/%d %T") Error: could not get a nginx-proxy container ID." >&2
         return 1
 fi
-}
-
-function ascending_wildcard_locations {
-    # Given foo.bar.baz.example.com as argument, will output:
-    # - *.bar.baz.example.com
-    # - *.baz.example.com
-    # - *.example.com
-    local domain="${1:?}"
-    local first_label
-    regex="^[[:alnum:]_\-]+(\.[[:alpha:]]+)?$"
-    until [[ "$domain" =~ $regex ]]; do
-      first_label="${domain%%.*}"
-      domain="${domain/${first_label}./}"
-      echo "*.${domain}"
-    done
-}
-
-function descending_wildcard_locations {
-    # Given foo.bar.baz.example.com as argument, will output:
-    # - foo.bar.baz.example.*
-    # - foo.bar.baz.*
-    # - foo.bar.*
-    # - foo.*
-    local domain="${1:?}"
-    local last_label
-    regex="^[[:alnum:]_\-]+$"
-    until [[ "$domain" =~ $regex ]]; do
-      last_label="${domain##*.}"
-      domain="${domain/.${last_label}/}"
-      echo "${domain}.*"
-    done
-}
-
-function enumerate_wildcard_locations {
-    # Goes through ascending then descending wildcard locations for a given FQDN
-    local domain="${1:?}"
-    ascending_wildcard_locations "$domain"
-    descending_wildcard_locations "$domain"
-}
-
-function add_location_configuration {
-    local domain="${1:-}"
-    local wildcard_domain
-    # If no domain was passed use default instead
-    [[ -z "$domain" ]] && domain='default'
-
-    # If the domain does not have an exact matching location file, test the possible
-    # wildcard locations files. Use default is no location file is present at all.
-    if [[ ! -f "${VHOST_DIR}/${domain}" ]]; then
-      for wildcard_domain in $(enumerate_wildcard_locations "$domain"); do
-        if [[ -f "${VHOST_DIR}/${wildcard_domain}" ]]; then
-          domain="$wildcard_domain"
-          break
-        fi
-        domain='default'
-      done
-    fi
-
-    if [[ -f "${VHOST_DIR}/${domain}" && -n $(sed -n "/$START_HEADER/,/$END_HEADER/p" "${VHOST_DIR}/${domain}") ]]; then
-        # If the config file exist and already have the location configuration, end with exit code 0
-        return 0
-    else
-        # Else write the location configuration to a temp file ...
-        echo "$START_HEADER" > "${VHOST_DIR}/${domain}".new
-        cat /app/nginx_location.conf >> "${VHOST_DIR}/${domain}".new
-        echo "$END_HEADER" >> "${VHOST_DIR}/${domain}".new
-        # ... append the existing file content to the temp one ...
-        [[ -f "${VHOST_DIR}/${domain}" ]] && cat "${VHOST_DIR}/${domain}" >> "${VHOST_DIR}/${domain}".new
-        # ... and copy the temp file to the old one (if the destination file is bind mounted, you can't change
-        # its inode from within the container, so mv won't work and cp has to be used), then remove the temp file.
-        cp -f "${VHOST_DIR}/${domain}".new "${VHOST_DIR}/${domain}" && rm -f "${VHOST_DIR}/${domain}".new
-        return 1
-    fi
 }
 
 function add_standalone_configuration {
@@ -137,16 +57,6 @@ function remove_all_standalone_configurations {
       rm -f "$file"
     done
     eval "$old_shopt_options" # Restore shopt options
-}
-
-function remove_all_location_configurations {
-    for file in "${VHOST_DIR}"/*; do
-        [[ -e "$file" ]] || continue
-        if [[ -n $(sed -n "/$START_HEADER/,/$END_HEADER/p" "$file") ]]; then
-            sed "/$START_HEADER/,/$END_HEADER/d" "$file" > "$file".new
-            cp -f "$file".new "$file" && rm -f "$file".new
-        fi
-    done
 }
 
 function check_cert_min_validity {
