@@ -1,6 +1,7 @@
-LETSENCRYPT_CONTAINERS=({{ range $hosts, $containers := groupBy $ "Env.LETSENCRYPT_HOST" }}{{ if trim $hosts }}{{ range $container := $containers }} '{{ printf "%.12s" $container.ID }}' {{ end }}{{ end }}{{ end }})
+{{ $host_variable_name := coalesce $.Env.HOST_VARIABLE_NAME "LETSENCRYPT_HOST" }}
+LETSENCRYPT_CONTAINERS=({{ range $hosts, $containers := groupBy $ (printf "Env.%s" $host_variable_name) }}{{ if trim $hosts }}{{ range $container := $containers }} '{{ printf "%.12s" $container.ID }}' {{ end }}{{ end }}{{ end }})
 
-{{ range $hosts, $containers := groupBy $ "Env.LETSENCRYPT_HOST" }}
+{{ range $hosts, $containers := groupBy $ (printf "Env.%s" $host_variable_name) }}
 
 {{ $hosts := trimSuffix "," $hosts }}
 
@@ -14,6 +15,7 @@ LETSENCRYPT_{{ $cid }}_RESTART_CONTAINER="{{ $container.Env.LETSENCRYPT_RESTART_
 LETSENCRYPT_{{ $cid }}_MIN_VALIDITY="{{ $container.Env.LETSENCRYPT_MIN_VALIDITY }}"
 LETSENCRYPT_{{ $cid }}_DNS_MODE="{{ $container.Env.LETSENCRYPT_DNS_MODE }}"
 LETSENCRYPT_{{ $cid }}_DNS_MODE_SETTINGS="{{ $container.Env.LETSENCRYPT_DNS_MODE_SETTINGS }}"
+
 {{ end }}
 
 {{ end }}
