@@ -1,8 +1,9 @@
 #!/bin/bash
 # shellcheck disable=SC2034
+{{ $host_variable_name := coalesce $.Env.HOST_VARIABLE_NAME "LETSENCRYPT_HOST" }}
 LETSENCRYPT_CONTAINERS=(
 {{ $orderedContainers := sortObjectsByKeysDesc $ "Created" }}
-{{ range $_, $container := whereExist $orderedContainers "Env.LETSENCRYPT_HOST" }}
+{{ range $_, $container := whereExist $orderedContainers (printf "Env.%s" $host_variable_name) }}
     {{ if trim $container.Env.LETSENCRYPT_HOST }}
         {{ if parseBool (coalesce $container.Env.LETSENCRYPT_SINGLE_DOMAIN_CERTS "false") }}
             {{/* Explicit per-domain splitting of the certificate */}}
@@ -18,7 +19,7 @@ LETSENCRYPT_CONTAINERS=(
 {{ end }}
 )
 
-{{ range $hosts, $containers := groupBy $ "Env.LETSENCRYPT_HOST" }}
+{{ range $hosts, $containers := groupBy $ (printf "Env.%s" $host_variable_name) }}
     {{ $hosts := trimSuffix "," $hosts }}
     {{ range $container := $containers }}
         {{/* Trim spaces and set empty values on per-container environment variables */}}
