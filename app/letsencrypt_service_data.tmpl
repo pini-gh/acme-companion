@@ -1,5 +1,6 @@
+{{ $host_variable_name := coalesce $.Env.HOST_VARIABLE_NAME "LETSENCRYPT_HOST" }}
 LETSENCRYPT_CONTAINERS=(
-    {{ range $hosts, $containers := groupBy $ "Env.LETSENCRYPT_HOST" }}
+    {{ range $hosts, $containers := groupBy $ (printf "Env.%s" $host_variable_name) }}
         {{ if trim $hosts }}
             {{ range $container := $containers }}
                 {{ if parseBool (coalesce $container.Env.LETSENCRYPT_SINGLE_DOMAIN_CERTS "false") }}
@@ -15,7 +16,7 @@ LETSENCRYPT_CONTAINERS=(
     {{ end }}
 )
 
-{{ range $hosts, $containers := groupBy $ "Env.LETSENCRYPT_HOST" }}
+{{ range $hosts, $containers := groupBy $ (printf "Env.%s" $host_variable_name) }}
     {{ $hosts := trimSuffix "," $hosts }}
     {{ range $container := $containers }}
         {{ $cid := printf "%.12s" $container.ID }}
