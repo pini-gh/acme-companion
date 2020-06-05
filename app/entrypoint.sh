@@ -155,6 +155,9 @@ function configure_default_email {
 
 source /app/functions.sh
 
+export NGINX_PROXY_CONTAINER_LABEL="${NGINX_PROXY_CONTAINER_LABEL:-com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy}"
+export DOCKER_GEN_CONTAINER_LABEL="${DOCKER_GEN_CONTAINER_LABEL:-com.github.jrcs.letsencrypt_nginx_proxy_companion.docker_gen}"
+
 if [[ "$*" == "/bin/bash /app/start.sh" ]]; then
     acmev1_r='acme-(v01\|staging)\.api\.letsencrypt\.org'
     if [[ "${ACME_CA_URI:-}" =~ $acmev1_r ]]; then
