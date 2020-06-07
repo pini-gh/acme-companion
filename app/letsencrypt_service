@@ -160,11 +160,7 @@ function update_certs {
         if [[ "$accountemail" == "<no value>" ]]; then
             accountemail="${DEFAULT_EMAIL:-}"
         fi
-        if [[ "$accountemail" == "$DEFAULT_EMAIL" ]]; then
-            config_name=default
-        else
-            config_name="$accountemail"
-        fi
+        config_name="${accountemail:-default}"
 
         acme_ca_uri_varname="LETSENCRYPT_${cid}_ACME_CA_URI"
         acme_ca_uri="${!acme_ca_uri_varname}"

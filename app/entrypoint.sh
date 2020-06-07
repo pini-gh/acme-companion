@@ -129,28 +129,13 @@ function check_default_cert_key {
     set_ownership_and_permissions "/etc/nginx/certs/default.crt"
 }
 
-function configure_default_email {
-    # Configure the email used by the default config
-    [[ -d /etc/acme.sh/default ]] || mkdir -p /etc/acme.sh/default
+function check_default_account {
+    # The default account is now for empty account email
     if [[ -f /etc/acme.sh/default/account.conf ]]; then
-        local ca_conf
-        for ca_conf in $(ls /etc/acme.sh/default/ca/*/ca.conf 2>/dev/null); do
-            eval $(grep '^ACME_DIRECTORY=' "$ca_conf")
-            local server_conf="${ACME_DIRECTORY:+--server ${ACME_DIRECTORY}}"
-            acme.sh --update-account $server_conf --acountemail "${DEFAULT_EMAIL:-}"
-        done
-        if [ -n "${ca_conf:-}" ]; then
-            return 0
-        elif grep -q ACCOUNT_EMAIL /etc/acme.sh/default/account.conf; then
-            if grep -q "${DEFAULT_EMAIL:-}" /etc/acme.sh/default/account.conf; then
-                return 0
-            else
-                sed -i "s/^ACCOUNT_EMAIL=.*$/ACCOUNT_EMAIL='${DEFAULT_EMAIL:-}'/g" /etc/acme.sh/default/account.conf
-                return 0
-            fi
+        if grep -q ACCOUNT_EMAIL /etc/acme.sh/default/account.conf; then
+            sed -i '/ACCOUNT_EMAIL/d' /etc/acme.sh/default/account.conf
         fi
     fi
-    echo "ACCOUNT_EMAIL='${DEFAULT_EMAIL:-}'" >> /etc/acme.sh/default/account.conf
 }
 
 source /app/functions.sh
@@ -196,7 +181,7 @@ if [[ "$*" == "/bin/bash /app/start.sh" ]]; then
     check_default_cert_key
     check_dh_group
     reload_nginx
-    [[ -n ${DEFAULT_EMAIL:-} ]] && configure_default_email
+    check_default_account
 fi
 
 exec "$@"
