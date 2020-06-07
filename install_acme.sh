@@ -12,11 +12,6 @@ git -C /src clone https://github.com/Neilpang/acme.sh.git
 cd /src/acme.sh
 git checkout "$commit_hash"
 
-# Apply our patches
-for patch in /app/acme.sh-patches/*; do
-  patch -p1 <$patch
-done
-
 # Install acme.sh in /app
 ./acme.sh --install \
   --nocron \
