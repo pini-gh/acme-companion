@@ -1,8 +1,12 @@
-[![Build Status](https://travis-ci.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion.svg?branch=master)](https://travis-ci.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion)
-[![GitHub release](https://img.shields.io/github/release/nginx-proxy/docker-letsencrypt-nginx-proxy-companion.svg)](https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion/releases)
-[![Image info](https://images.microbadger.com/badges/image/jrcs/letsencrypt-nginx-proxy-companion.svg)](https://hub.docker.com/r/jrcs/letsencrypt-nginx-proxy-companion "Click to view the image on Docker Hub")
-[![Docker stars](https://img.shields.io/docker/stars/jrcs/letsencrypt-nginx-proxy-companion.svg)](https://hub.docker.com/r/jrcs/letsencrypt-nginx-proxy-companion "Click to view the image on Docker Hub")
-[![Docker pulls](https://img.shields.io/docker/pulls/jrcs/letsencrypt-nginx-proxy-companion.svg)](https://hub.docker.com/r/jrcs/letsencrypt-nginx-proxy-companion "Click to view the image on Docker Hub")
+[![Build Status](https://travis-ci.com/pini-gh/docker-letsencrypt-nginx-proxy-companion.svg?branch=dns-01-challenge)](https://travis-ci.com/github/pini-gh/docker-letsencrypt-nginx-proxy-companion)
+[![GitHub release](https://img.shields.io/github/v/release/pini-gh/docker-letsencrypt-nginx-proxy-companion.svg)](https://github.com/pini-gh/docker-letsencrypt-nginx-proxy-companion/releases)
+[![Image info](https://images.microbadger.com/badges/image/pinidh/letsencrypt-nginx-proxy-companion.svg)](https://hub.docker.com/r/pinidh/letsencrypt-nginx-proxy-companion "Click to view the image on Docker Hub")
+
+This fork of [docker-letsencrypt-nginx-proxy-companion](https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion) brings support for:
+* DNS mode challenge
+* Wildcard domain certificates
+
+Docker image available on dockerhub as [pinidh/letsencrypt-nginx-proxy-companion](https://hub.docker.com/repository/docker/pinidh/letsencrypt-nginx-proxy-companion).
 
 **letsencrypt-nginx-proxy-companion** is a lightweight companion container for [**nginx-proxy**](https://github.com/nginx-proxy/nginx-proxy).
 
@@ -12,9 +16,10 @@ The `v2.0.0` release of this project mark the switch of the ACME client used by 
 
 ### Features:
 * Automated creation/renewal of Let's Encrypt (or other ACME CAs) certificates using [**acme.sh**](https://github.com/acmesh-official/acme.sh).
-* Let's Encrypt / ACME domain validation through `http-01` challenge only.
+* Let's Encrypt / ACME domain validation through `http-01` or dns-01 challenge.
 * Automated update and reload of nginx config on certificate creation/renewal.
 * Support creation of [Multi-Domain (SAN) Certificates](https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion/blob/master/docs/Let's-Encrypt-and-ACME.md#multi-domains-certificates).
+* Support creation of wildcard certificates.
 * Creation of a Strong Diffie-Hellman Group at startup.
 * Work with all versions of docker.
 
@@ -33,7 +38,6 @@ The `v2.0.0` release of this project mark the switch of the ACME client used by 
 Three writable volumes must be declared on the **nginx-proxy** container so that they can be shared with the **letsencrypt-nginx-proxy-companion** container:
 
 * `/etc/nginx/certs` to store certificates and private keys (readonly for the **nginx-proxy** container).
-* `/etc/nginx/vhost.d` to change the configuration of vhosts (required so the CA may access `http-01` challenge files).
 * `/usr/share/nginx/html` to write `http-01` challenge files.
 
 Additionally, a fourth volume must be declared on the **letsencrypt-nginx-proxy-companion** container to store `acme.sh` configuration and state: `/etc/acme.sh`.
