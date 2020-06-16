@@ -4,15 +4,22 @@
 [![Docker stars](https://img.shields.io/docker/stars/nginxproxy/acme-companion.svg)](https://hub.docker.com/r/nginxproxy/acme-companion "Click to view the image on Docker Hub")
 [![Docker pulls](https://img.shields.io/docker/pulls/nginxproxy/acme-companion.svg)](https://hub.docker.com/r/nginxproxy/acme-companion "Click to view the image on Docker Hub")
 
+This fork of [acme-companion](https://github.com/nginx-proxy/acme-companion) brings support for:
+* DNS mode challenge
+* Wildcard domain certificates
+
+Docker image available on dockerhub as [pinidh/acme-companion](https://hub.docker.com/repository/docker/pinidh/acme-companion).
+
 **acme-companion** is a lightweight companion container for [**nginx-proxy**](https://github.com/nginx-proxy/nginx-proxy).
 
 It handles the automated creation, renewal and use of SSL certificates for proxied Docker containers through the ACME protocol.
 
 ### Features:
 * Automated creation/renewal of Let's Encrypt (or other ACME CAs) certificates using [**acme.sh**](https://github.com/acmesh-official/acme.sh).
-* Let's Encrypt / ACME domain validation through `http-01` challenge only.
+* Let's Encrypt / ACME domain validation through `http-01` or dns-01 challenge.
 * Automated update and reload of nginx config on certificate creation/renewal.
 * Support creation of [Multi-Domain (SAN) Certificates](https://github.com/nginx-proxy/acme-companion/blob/main/docs/Let's-Encrypt-and-ACME.md#multi-domains-certificates).
+* Support creation of wildcard certificates.
 * Creation of a strong [RFC7919 Diffie-Hellman Group](https://datatracker.ietf.org/doc/html/rfc7919#appendix-A) at startup.
 * Work with all versions of docker.
 
