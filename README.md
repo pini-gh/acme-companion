@@ -4,6 +4,8 @@ This fork of [docker-letsencrypt-nginx-proxy-companion](https://github.com/nginx
 
 It is based on [initial work by @buchdag](https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion/issues/510).
 
+Docker image available on dockerhub as [pinidh/letsencrypt-nginx-proxy-companion](https://hub.docker.com/repository/docker/pinidh/letsencrypt-nginx-proxy-companion).
+
 **letsencrypt-nginx-proxy-companion** is a lightweight companion container for [**nginx-proxy**](https://github.com/jwilder/nginx-proxy).
 
 It handles the automated creation, renewal and use of Let's Encrypt certificates for proxyed Docker containers.
