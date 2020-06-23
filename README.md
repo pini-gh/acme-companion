@@ -1,3 +1,5 @@
+[![Build Status](https://api.travis-ci.com/pini-gh/docker-letsencrypt-nginx-proxy-companion.svg?branch=acme.sh)](https://travis-ci.com/github/pini-gh/docker-letsencrypt-nginx-proxy-companion)
+
 This fork of [docker-letsencrypt-nginx-proxy-companion](https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion) uses [acme.sh](https://github.com/acmesh-official/acme.sh) as Let's Encrypt client (instead of simp_le) and brings support for:
 * DNS mode challenge
 * Wildcard domain certificates
