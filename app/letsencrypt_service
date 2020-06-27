@@ -244,6 +244,13 @@ function update_certs {
             params_d+=( "--domain" "$domain" )
         done
 
+        # Force renewal when .companion flag file doesn't exist, so that
+        # everything is set correctly into the nginx-proxy cert volume
+        # even if a certificate already exists into /etc/acme.sh/$config_name
+        if [[ ! -e "${certificate_dir}/.companion" ]]; then
+            params_d+=( "--force" )
+        fi
+
         echo "Creating/renewal $base_domain certificates... (${hosts_array_expanded[*]})"
         acme.sh --issue \
                 --log /dev/null \
