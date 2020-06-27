@@ -9,6 +9,7 @@ This fork of [acme-companion](https://github.com/nginx-proxy/acme-companion) bri
 * Wildcard domain certificates
 
 Docker image available on dockerhub as [pinidh/acme-companion](https://hub.docker.com/repository/docker/pinidh/acme-companion).
+It requires [pinidh/nginx-proxy](https://hub.docker.com/repository/docker/pinidh/nginx-proxy).
 
 **acme-companion** is a lightweight companion container for [**nginx-proxy**](https://github.com/nginx-proxy/nginx-proxy).
 
