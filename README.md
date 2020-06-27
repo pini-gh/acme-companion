@@ -7,6 +7,7 @@ This fork of [docker-letsencrypt-nginx-proxy-companion](https://github.com/nginx
 * Wildcard domain certificates
 
 Docker image available on dockerhub as [pinidh/letsencrypt-nginx-proxy-companion](https://hub.docker.com/repository/docker/pinidh/letsencrypt-nginx-proxy-companion).
+It requires [pinidh/nginx-proxy](https://hub.docker.com/repository/docker/pinidh/nginx-proxy).
 
 **letsencrypt-nginx-proxy-companion** is a lightweight companion container for [**nginx-proxy**](https://github.com/nginx-proxy/nginx-proxy).
 
