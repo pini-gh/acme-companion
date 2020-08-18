@@ -1,0 +1,70 @@
+version: "3.5"
+
+services:
+  testing_reverse_proxy:
+    image: pinidh/nginx-proxy:latest
+    container_name: testing_reverse_proxy
+    restart: always
+    # Just exposing because we stand behind the main reverse proxy
+    expose:
+      - "80"
+      - "443"
+    volumes:
+      - vhost:/etc/nginx/vhost.d:ro
+      - html:/usr/share/nginx/html
+      - dhparam:/etc/nginx/dhparam
+      - certs:/etc/nginx/certs
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    labels:
+    - testing_reverse_proxy.nginx_proxy=true
+    environment:
+    # vhost variables
+    - VIRTUAL_HOST=*.testing.example.com
+    - VIRTUAL_PORT=80
+    - HTTPS_METHOD=passthrough
+    # nginx-proxy variables
+    - HOST_VARIABLE_NAME=TESTING_VIRTUAL_HOST
+    - HTTPS_PROXY_PROTOCOL=true
+    # Replace with the result of the following command:
+    # docker inspect reverse-proxy_bridge | jq -r '.[0].IPAM.Config[0].Subnet'
+    - REAL_IP_FROM=172.19.0.0/16
+    networks:
+      reverse-proxy_bridge:
+
+  testing_letsencrypt:
+    image: pinidh/letsencrypt-nginx-proxy-companion:latest
+    container_name: testing_letsencrypt
+    restart: always
+    volumes:
+    - acme:/etc/acme.sh
+    - certs:/etc/nginx/certs
+    - html:/usr/share/nginx/html
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      reverse-proxy_bridge:
+    environment:
+    - NGINX_PROXY_CONTAINER_LABEL=testing_reverse_proxy.nginx_proxy
+    - HOST_VARIABLE_NAME=TESTING_LETSENCRYPT_HOST
+    - DEFAULT_EMAIL=admin@example.com
+
+  testing_hello_world:
+    image: dockerbogo/docker-nginx-hello-world:latest
+    container_name: testing_hello_world
+    restart: always
+    environment:
+    - TESTING_VIRTUAL_HOST=hello.testing.example.com
+    - TESTING_LETSENCRYPT_HOST=hello.testing.example.com
+    - TESTING_LETSENCRYPT_TEST=true
+    networks:
+      reverse-proxy_bridge:
+
+volumes:
+  vhost:
+  acme:
+  certs:
+  dhparam:
+  html:
+
+networks:
+  reverse-proxy_bridge:
+    external: true
