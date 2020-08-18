@@ -1,0 +1,65 @@
+version: '3.5'
+
+services:
+  reverse-proxy:
+    image: pinidh/nginx-proxy:latest
+    container_name: reverse-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Uncomment to enable multiple nginx-proxy instances
+      # e.g. to use with docker-compose-testing.yml
+      #- HTTPS_PASSTHROUGH_PORT=444
+    labels:
+    - reverse-proxy.nginx-proxy=true
+    volumes:
+      - vhost:/etc/nginx/vhost.d:ro
+      - html:/usr/share/nginx/html
+      - dhparam:/etc/nginx/dhparam
+      - certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      bridge:
+
+  letsencrypt:
+    image: pinidh/letsencrypt-nginx-proxy-companion:latest
+    container_name: letsencrypt
+    restart: always
+    depends_on:
+      - reverse-proxy
+    environment:
+      - DEFAULT_EMAIL=admin@example.com
+      - NGINX_PROXY_CONTAINER_LABEL=reverse-proxy.nginx-proxy
+    volumes:
+      - acme:/etc/acme.sh
+      - html:/usr/share/nginx/html
+      - certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      bridge:
+
+  hello_world:
+    image: dockerbogo/docker-nginx-hello-world:latest
+    container_name: hello_world
+    restart: always
+    environment:
+    - VIRTUAL_HOST=hello.example.com
+    - LETSENCRYPT_HOST=example.com,*.example.com
+    - LETSENCRYPT_DNS_MODE=dns_gandi_livedns
+    - LETSENCRYPT_DNS_MODE_SETTINGS=export GANDI_LIVEDNS_KEY=<your_api_key>
+    # Uncomment when testing
+    #- LETSENCRYPT_TEST=true
+    networks:
+      bridge:
+
+volumes:
+  vhost:
+  acme:
+  html:
+  dhparam:
+  certs:
+
+networks:
+  bridge:
