@@ -54,7 +54,7 @@ services:
     environment:
     - TESTING_VIRTUAL_HOST=hello.testing.example.com
     - TESTING_LETSENCRYPT_HOST=hello.testing.example.com
-    - TESTING_LETSENCRYPT_TEST=true
+    - LETSENCRYPT_TEST=true
     networks:
       reverse-proxy_bridge:
 
