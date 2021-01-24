@@ -50,12 +50,8 @@ fi
 
 function add_standalone_configuration {
     local domain="${1:?}"
-    if grep -q "server_name ${domain};" /etc/nginx/conf.d/*.conf; then
-        # If the domain is already present in nginx's conf, use the location configuration.
-        add_location_configuration "$domain"
-    else
-        # Else use the standalone configuration.
-        cat > "/etc/nginx/conf.d/standalone-cert-$domain.conf" << EOF
+    [[ "$DEBUG" == 1 ]] && echo "Debug: creating standalone configuration file /etc/nginx/conf.d/standalone-cert-$domain.conf"
+    cat > "/etc/nginx/conf.d/standalone-cert-$domain.conf" << EOF
 server {
     server_name $domain;
     listen 80;
@@ -70,7 +66,6 @@ server {
     }
 }
 EOF
-    fi
 }
 
 function remove_all_standalone_configurations {
