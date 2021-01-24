@@ -435,20 +435,32 @@ function update_certs {
         echo "Warning: /app/letsencrypt_service_data not found, skipping data from containers."
     fi
 
-    # Load settings for standalone certs
+    # Load settings for standalone certs defined into /app/letsencrypt_user_data
     if [[ -f /app/letsencrypt_user_data ]]; then
         if source /app/letsencrypt_user_data; then
-            for cid in "${LETSENCRYPT_STANDALONE_CERTS[@]}"; do
-                local -n hosts_array="LETSENCRYPT_${cid}_HOST"
-                for domain in "${hosts_array[@]}"; do
-                    add_standalone_configuration "$domain"
-                done
-            done
-            reload_nginx
             LETSENCRYPT_CONTAINERS+=( "${LETSENCRYPT_STANDALONE_CERTS[@]}" )
         else
             echo "Warning: could not source /app/letsencrypt_user_data, skipping user data"
         fi
+    fi
+
+    # Configure http-01 challenge for standalone certs
+    if ! [[ -d /etc/nginx/conf.d ]]; then
+        echo "Warning: /etc/nginx/conf.d not mounted; skipping standalone configuration"
+    else
+        should_reload_nginx='false'
+        for cid in "${LETSENCRYPT_CONTAINERS[@]}"; do
+            local -n hosts_array="LETSENCRYPT_${cid}_HOST"
+            for domain in "${hosts_array[@]}"; do
+                # Add the standalone configuration if and only if the domain is
+                # not already present in nginx's conf. If it is present, the location
+                # configuration is expected to be there.
+                if ! grep -q "server_name ${domain};" /etc/nginx/conf.d/*.conf; then
+                    add_standalone_configuration "$domain" && should_reload_nginx=true
+                fi
+            done
+        done
+        [[ "$should_reload_nginx" == 'true' ]] && reload_nginx
     fi
 
     should_reload_nginx='false'
