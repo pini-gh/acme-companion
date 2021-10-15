@@ -33,7 +33,8 @@ RUN apk add --no-cache --virtual .bin-deps \
         curl \
         jq \
         openssl \
-        socat
+        socat \
+        bind-tools
 
 # Install docker-gen from build stage
 COPY --from=go-builder /usr/local/bin/docker-gen /usr/local/bin/
