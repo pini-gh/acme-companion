@@ -1,6 +1,6 @@
 FROM docker.io/nginxproxy/docker-gen:0.11.1 AS docker-gen
 
-FROM docker.io/library/alpine:3.19.0
+FROM docker.io/library/alpine:3.19.1
 
 ARG GIT_DESCRIBE
 ARG ACMESH_VERSION=3.0.7
