@@ -38,10 +38,8 @@ LETSENCRYPT_CONTAINERS=(
         {{ $DNS_MODE_SETTINGS := trim (coalesce $container.Env.LETSENCRYPT_DNS_MODE_SETTINGS "") }}
         {{ $DNS_MODE := coalesce $container.Env.LETSENCRYPT_DNS_MODE "" | trimSuffix "," | trim }}
         {{ $DNS_CHALLENGE_ALIAS := coalesce $container.Env.LETSENCRYPT_DNS_CHALLENGE_ALIAS "" | trimSuffix "," | trim }}
-        {{ $DNS_DOMAIN_ALIAS := coalesce $container.Env.LETSENCRYPT_DNS_DOMAIN_ALIAS "" | trimSuffix "," | trim }}
         {{ $dnsModes := split $DNS_MODE "," }}
         {{ $dnsChallengeAliases := split $DNS_CHALLENGE_ALIAS "," }}
-        {{ $dnsDomainAliases := split $DNS_DOMAIN_ALIAS "," }}
         {{ $cid := printf "%.12s" $container.ID }}
         {{- "\n" }}# Container {{ $cid }} ({{ $container.Name }})
         {{ if parseBool (coalesce $container.Env.LETSENCRYPT_SINGLE_DOMAIN_CERTS "false") }}
@@ -65,25 +63,34 @@ LETSENCRYPT_CONTAINERS=(
                 {{- "\n" }}ACME_{{ $cid }}_{{ $hostHash }}_POST_HOOK="{{ $POST_HOOK }}"
                 {{- "\n" }}LETSENCRYPT_{{ $cid }}_{{ $hostHash }}_DNS_MODE_SETTINGS="{{ $DNS_MODE_SETTINGS }}"
                 {{- "\n" }}LETSENCRYPT_{{ $cid }}_{{ $hostHash }}_DNS_MODE=(
-                    {{ if ne $DNS_MODE "" }}
-                        {{- if lt $hostsIndex (len $dnsModes) -}}
-                            '{{ index $dnsModes $hostsIndex | trim | trimSuffix "." }}'
+                        {{ if ne $DNS_MODE "" }}
+                            {{- if lt $hostsIndex (len $dnsModes) -}}
+                                {{ $dnsMode := index $dnsModes $hostsIndex | trim | trimSuffix "." }}
+                                {{- if ne $dnsMode "" -}}
+                                    '{{ $dnsMode }}'
+                                {{- end -}}
+                            {{- else -}}
+                                {{ $firstDnsMode := index $dnsModes 0 | trim | trimSuffix "." }}
+                                {{- if ne $firstDnsMode "" -}}
+                                    '{{ $firstDnsMode }}'
+                                {{- end -}}
+                            {{- end -}}
                         {{- end -}}
-                    {{ end }}
                 )
                 {{- "\n" }}LETSENCRYPT_{{ $cid }}_{{ $hostHash }}_DNS_CHALLENGE_ALIAS=(
-                    {{ if ne $DNS_CHALLENGE_ALIAS "" }}
-                        {{- if lt $hostsIndex (len $dnsChallengeAliases) -}}
-                            '{{ index $dnsChallengeAliases $hostsIndex | trim | trimSuffix "." }}'
+                        {{ if ne $DNS_CHALLENGE_ALIAS "" }}
+                            {{- if lt $hostsIndex (len $dnsChallengeAliases) -}}
+                                {{ $dnsChallengeAlias := index $dnsChallengeAliases $hostsIndex | trim | trimSuffix "." }}
+                                {{- if and (ne $dnsChallengeAlias "") (ne $dnsChallengeAlias "no") -}}
+                                    '{{ $dnsChallengeAlias }}'
+                                {{- end -}}
+                            {{- else -}}
+                                {{ $firstDnsChallengeAlias := index $dnsChallengeAliases 0 | trim | trimSuffix "." }}
+                                {{- if and (ne $firstDnsChallengeAlias "") (ne $firstDnsChallengeAlias "no") -}}
+                                    '{{ $firstDnsChallengeAlias }}'
+                                {{- end -}}
+                            {{- end -}}
                         {{- end -}}
-                    {{ end }}
-                )
-                {{- "\n" }}LETSENCRYPT_{{ $cid }}_{{ $hostHash }}_DNS_DOMAIN_ALIAS=(
-                    {{ if ne $DNS_DOMAIN_ALIAS "" }}
-                        {{- if lt $hostsIndex (len $dnsDomainAliases) -}}
-                            '{{ index $dnsDomainAliases $hostsIndex | trim | trimSuffix "." }}'
-                        {{- end -}}
-                    {{ end }}
                 )
             {{ end }}
         {{ else }}
@@ -109,26 +116,18 @@ LETSENCRYPT_CONTAINERS=(
             {{- "\n" }}ACME_{{ $cid }}_POST_HOOK="{{ $POST_HOOK }}"
             {{- "\n" }}LETSENCRYPT_{{ $cid }}_DNS_MODE_SETTINGS="{{ $DNS_MODE_SETTINGS }}"
             {{- "\n" }}LETSENCRYPT_{{ $cid }}_DNS_MODE=(
-                {{ if ne $DNS_MODE "" }}
-                    {{- range $dnsMode := $dnsModes -}}
-                        '{{ $dnsMode | trim | trimSuffix "." }}'{{ " " }} 
+                    {{ if ne $DNS_MODE "" }}
+                        {{- range $dnsMode := $dnsModes -}}
+                            '{{ $dnsMode | trim | trimSuffix "." }}'{{ " " }} 
+                        {{- end -}}
                     {{- end -}}
-                {{ end }}
             )
             {{- "\n" }}LETSENCRYPT_{{ $cid }}_DNS_CHALLENGE_ALIAS=(
-                {{ if ne $DNS_CHALLENGE_ALIAS "" }}
-                    {{- range $dnsChallengeAlias := $dnsChallengeAliases -}}
-                        '{{ $dnsChallengeAlias | trim | trimSuffix "." }}'{{ " " }} 
+                    {{ if ne $DNS_CHALLENGE_ALIAS "" }}
+                        {{- range $dnsChallengeAlias := $dnsChallengeAliases -}}
+                            '{{ $dnsChallengeAlias | trim | trimSuffix "." }}'{{ " " }} 
+                        {{- end -}}
                     {{- end -}}
-                {{ end }}
-            )
-            {{- "\n" }}LETSENCRYPT_{{ $cid }}_DNS_DOMAIN_ALIAS=(
-
-                {{ if ne $DNS_DOMAIN_ALIAS "" }}
-                    {{- range $dnsDomainAlias := $dnsDomainAliases -}}
-                        '{{ $dnsDomainAlias | trim | trimSuffix "." }}'{{ " " }} 
-                    {{- end -}}
-                {{ end }}
             )
         {{ end }}
     {{ end }}
