@@ -194,22 +194,60 @@ function update_cert {
         acme_ca_uri="$ACME_CA_URI"
     fi
 
-    # Use DNS mode if configured
-    dns_mode_varname="LETSENCRYPT_${cid}_DNS_MODE"
-    dns_mode="${!dns_mode_varname:-"<no value>"}"
-    if [[ "$dns_mode" != "<no value>" ]]; then
-        params_issue_arr+=(--dns "${dns_mode}")
+    local dns_api_applicable=false
+
+    local -n dns_challenge_aliases_array="LETSENCRYPT_${cid}_DNS_CHALLENGE_ALIAS"
+    local -n dns_modes_array="LETSENCRYPT_${cid}_DNS_MODE"
+
+    local dns_mode_settings_varname="LETSENCRYPT_${cid}_DNS_MODE_SETTINGS"
+    local dns_mode_settings="${!dns_mode_settings_varname:-"<no value>"}"
+
+    # Either, we have just one dns mode entry (used for all domains)
+    # or we need to have one mode entry for each / per domain
+    # (with LETSENCRYPT_SINGLE_DOMAIN_CERTS set to true,
+    # both is simultaniously true or false, hence still functions)
+    if { [ "${#dns_modes_array[*]}" -eq "1" ] || [ "${#dns_modes_array[*]}" -eq "${#hosts_array[*]}" ]; } && [[ "$dns_mode_settings" != "<no value>" ]]; then
+
+        [[ "$DEBUG" == 1 ]] && echo "Debug: DNS Mode Settings: ${dns_mode_settings}"
+        [[ "$DEBUG" == 1 ]] && echo "Debug: DNS Modes: ${dns_modes_array[*]} (${#dns_modes_array[*]})"
+        [[ "$DEBUG" == 1 ]] && echo "Debug: DNS Challenge Aliases: ${dns_challenge_aliases_array[*]} (${#dns_challenge_aliases_array[*]})"
+        [[ "$DEBUG" == 1 ]] && echo "Debug: Hosts: ${hosts_array[*]} (${#hosts_array[*]})"
+
+        dns_api_applicable=true;
+
         # Apply DNS mode settings
         # Setting are in the form "export VAR=value ..."
-        dns_mode_settings_varname="LETSENCRYPT_${cid}_DNS_MODE_SETTINGS"
-        dns_mode_settings="${!dns_mode_settings_varname}"
-        if [[ "$dns_mode_settings" != "<no value>" ]]; then
-            eval "$dns_mode_settings"
-        fi
+        eval "$dns_mode_settings"
+
     else
-        # fallback on webroot mode
+        [[ "$DEBUG" == 1 ]] && echo "Debug: No valid DNS challenge config given."
+        [[ "$DEBUG" == 1 ]] && echo "Falling back to webroot mode."
+
         params_issue_arr+=(--webroot /usr/share/nginx/html)
     fi
+
+    for hosts_index in "${!hosts_array[@]}"; do
+    
+        local domain="${hosts_array[$hosts_index]}"
+      
+        # Add all the domains to certificate
+        params_issue_arr+=(--domain "$domain")
+
+        # Use DNS mode if configured
+        if [ "$dns_api_applicable" = true ]; then
+
+            local dns_challenge_alias="${dns_challenge_aliases_array[$hosts_index]}"
+            local dns_mode="${dns_modes_array[$hosts_index]}"
+
+            if  [ "${dns_challenge_alias}" ]; then
+                params_issue_arr+=(--challenge-alias "${dns_challenge_alias}")
+            fi
+
+            if [ "$dns_mode" ]; then
+                params_issue_arr+=(--dns "${dns_mode}")
+            fi
+        fi
+    done
 
     # LETSENCRYPT_TEST overrides LETSENCRYPT_ACME_CA_URI
     local -n test_certificate="LETSENCRYPT_${cid}_TEST"
@@ -365,11 +403,6 @@ function update_cert {
     # Create directory for the first domain
     mkdir -p "$certificate_dir"
     set_ownership_and_permissions "$certificate_dir"
-
-    for domain in "${hosts_array[@]}"; do
-        # Add all the domains to certificate
-        params_issue_arr+=(--domain "$domain")
-    done
 
     params_issue_arr=("${params_base_arr[@]}" "${params_issue_arr[@]}")
     [[ "$DEBUG" == 1 ]] && echo "Calling acme.sh --issue with the following parameters : ${params_issue_arr[*]}"
