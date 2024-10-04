@@ -55,6 +55,7 @@ function add_standalone_configuration {
 server {
     server_name $domain;
     listen 80;
+    listen [::]:80;
     access_log /var/log/nginx/access.log vhost;
     location ^~ /.well-known/acme-challenge/ {
         auth_basic off;
